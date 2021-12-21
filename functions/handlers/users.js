@@ -25,6 +25,7 @@ const userSignup = (req, res) => {
               phone: newUser.phoneNumber,
               firstName: reqData.firstName,
               lastName: reqData.lastName,
+              userType: 'PROD',
               createdDate: new Date().toISOString()
           }
 
@@ -98,9 +99,10 @@ const userSignin = (req, res) => {
 const getAllUsers = (req, res) => {
     db
         .collection('users')
-        .orderBy('createdDate', 'desc')
+        .where('userType', '==', 'PROD')
         .get()
         .then((data) => {
+            console.log('User Data: ', data);
            let users = [];
            data.forEach((doc) => {
                users.push({

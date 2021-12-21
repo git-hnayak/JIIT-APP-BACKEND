@@ -33,7 +33,8 @@ const {
 const {
     createNewExpense,
     fetchAllExpenses,
-    updateExpense
+    updateExpense,
+    deleteExpense
 } = require('./handlers/expenses');
 const app = express();
 
@@ -74,6 +75,7 @@ app.get('/courses/:branch', FBAuth, fetchCoursesByBranch);
 app.post('/expense', FBAuth, createNewExpense);
 app.post('/expense/update', FBAuth, updateExpense);
 app.get('/expense/allexpenses', FBAuth, fetchAllExpenses);
+app.delete('/expense/:id', FBAuth, deleteExpense);
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);

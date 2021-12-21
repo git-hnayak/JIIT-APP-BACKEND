@@ -14,13 +14,15 @@ const fetchAllExpenses = (req, res) => {
         .get()
         .then((data) => {
            let expenses = [];
+           let totalExpense = 0;
            data.forEach((doc) => {
+            totalExpense += Number(doc.data().expenseAmount);
             expenses.push({
                    id: doc.id,
                    ...doc.data()
                });
            });
-           return res.json(expenses);
+           return res.json({expenses, totalExpense});
         })
         .catch((err) => {
             res.status(500).json({ message: 'Something went wrong' });
@@ -59,8 +61,21 @@ const updateExpense = (req, res) => {
         })
 };
 
+// Delete Expense
+const deleteExpense = (req, res) => {
+    const expenseId = req.params.id;
+    db.doc(`/expenses/${expenseId}`).delete()
+        .then(() => {
+            return res.json({ message: 'Expense deleted successfully' });
+        })
+        .catch(error => {
+            res.status(500).json({ error });
+        })
+};
+
 module.exports = {
     createNewExpense,
     updateExpense,
+    deleteExpense,
     fetchAllExpenses
 }
