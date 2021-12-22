@@ -192,6 +192,94 @@ const updateStudent = (req, res) => {
         })
 };
 
+// Get Total Student Payments
+const fetchStudentInfoInTotal = (req, res) => {
+    let query = db.collection('students');
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+    query
+        .get()
+        .then((data) => {
+           let totalPayment = 0;
+           let totalRegularStudents = 0;
+           let totalUrgentStudents = 0;
+           let totalSarvaNotRegistered = 0;
+           let totalSarvaMarkNotSent = 0;
+           let totalCourseFeeNotCompleted = 0;
+           let totalCertificateNotIssued = 0;
+           let totalPGDCAStudents = 0;
+           let totalADCAStudents = 0;
+           let totalADCFAStudents = 0;
+           let totalDCAStudents = 0;
+           let totalDCFAStudents = 0;
+           data.forEach((doc) => {
+               const studentData = doc.data();
+               const payments = studentData.payment;
+               if (studentData.certificateType === 'REGULAR') {
+                totalRegularStudents += 1;
+               }
+               if (studentData.certificateType === 'URGENT') {
+                totalUrgentStudents += 1;
+               }
+               if (studentData.sarvaRegistrationStatus !== 'COMPLETE') {
+                totalSarvaNotRegistered += 1;
+               }
+               if (studentData.sarvaMarkDetailsRegistrationStatus !== 'COMPLETE') {
+                totalSarvaMarkNotSent += 1;
+               }
+               if (!studentData.isCertificateIssued) {
+                totalCertificateNotIssued += 1;
+               }
+               if (studentData.course === 'PGDCA') {
+                totalPGDCAStudents += 1;
+               }
+               if (studentData.course === 'ADCA') {
+                totalADCAStudents += 1;
+               }
+               if (studentData.course === 'ADCFA') {
+                totalADCFAStudents += 1;
+               }
+               if (studentData.course === 'DCFA') {
+                totalDCFAStudents += 1;
+               }
+               if (studentData.course === 'DCA') {
+                totalDCAStudents += 1;
+               }
+               let stdPayCount = 0;
+               payments.forEach((payment) => {
+                totalPayment += Number(payment.amount);
+                stdPayCount += Number(payment.amount);
+               })
+               if (stdPayCount < studentData.courseFee) {
+                totalCourseFeeNotCompleted += 1;
+               }
+           });
+           return res.json({
+                totalPayment,
+                totalRegularStudents,
+                totalUrgentStudents,
+                totalSarvaNotRegistered,
+                totalSarvaMarkNotSent,
+                totalCourseFeeNotCompleted,
+                totalCertificateNotIssued,
+                totalPGDCAStudents,
+                totalADCAStudents,
+                totalADCFAStudents,
+                totalDCAStudents,
+                totalDCFAStudents
+           });
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
+
 module.exports = {
     fetchAllStudents,
     fetchRecentStudents,
@@ -199,5 +287,6 @@ module.exports = {
     updateStudent,
     fetchStudentById,
     fetchAllStudentsByBranchAndCertType,
-    fetchStudentsByQuery
+    fetchStudentsByQuery,
+    fetchStudentInfoInTotal
 }
