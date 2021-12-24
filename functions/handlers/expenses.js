@@ -33,6 +33,7 @@ const fetchAllExpenses = (req, res) => {
 // Create New Expense
 const createNewExpense = (req, res) => {
     const expenseData = req.body;
+    expenseData.type = 'REGULAR';
     expenseData.createdDate = new Date().toISOString();
     expenseData.createdBy = req.user.firstName + ' ' + req.user.lastName;
     expenseData.branchLocation = getBranchLocation(req.user.role);

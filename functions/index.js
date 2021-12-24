@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
 const { FBAuth } = require('./utils/fbAuthMiddleware');
-// require('./utils/schedulers');
+require('./utils/schedulers');
 const {
     userSignin,
     userSignup,
@@ -37,6 +37,13 @@ const {
     updateExpense,
     deleteExpense
 } = require('./handlers/expenses');
+const {
+    createSalaryExpenseOptions,
+    updateRecuringExpenseOptions,
+    createNewRecurringExpense,
+    updateRecurringExpense,
+    fetchRecurringExpenses
+} = require('./handlers/recurringExpenses');
 const app = express();
 
 app.use(cors());
@@ -78,6 +85,14 @@ app.post('/expense', FBAuth, createNewExpense);
 app.post('/expense/update', FBAuth, updateExpense);
 app.get('/expense/allexpenses', FBAuth, fetchAllExpenses);
 app.delete('/expense/:id', FBAuth, deleteExpense);
+
+// Recurring Expense Routes
+app.post('/salaryexpenseoption', FBAuth, createSalaryExpenseOptions);
+app.post('/updaterecurringexpenseoptions', FBAuth, updateRecuringExpenseOptions);
+app.post('/createrecurringexpense', FBAuth, createNewRecurringExpense);
+app.post('/updaterecurringexpense', FBAuth, updateRecurringExpense);
+app.get('/fetchrecurringexpense', FBAuth, fetchRecurringExpenses);
+
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);
