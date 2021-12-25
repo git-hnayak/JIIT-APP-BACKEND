@@ -9,9 +9,9 @@ const { db, admin } = require('./fbConfig');
 //     console.log('Run Task2 every 10s');
 // });
 
-const addRentExpenseJobCron = '* * 25 * *'; // On 10th of every month
-const addElectricityExpenseJobCron = '* * 25 * *'; // On 20th of every month
-const addSalaryExpenseJobCron = '* * 25 * *'; // On 5th of every month
+const addRentExpenseJobCron = '0 0 26 * *'; // On 10th of every month
+const addElectricityExpenseJobCron = '0 0 26 * *'; // On 20th of every month
+const addSalaryExpenseJobCron = '0 0 26 * *'; // On 5th of every month
 
 const addRentExpenseJob = cron.schedule(addRentExpenseJobCron, async () =>  {
     const rentExpenseData = {
@@ -77,7 +77,7 @@ const addElectricityExpenseJob = cron.schedule(addElectricityExpenseJobCron, asy
             console.log(`Electricity Recurring Expense added successfully with id: ${recurringExpSuccessData.id}`);
         }
     } catch (error) {
-        console.log('addElectricityExpenseJob Error: ', error)
+        console.log('addElectricityExpenseJob Error: ', error);
     }
 });
 
