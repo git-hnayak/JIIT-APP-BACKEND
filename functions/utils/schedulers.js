@@ -9,11 +9,11 @@ const { db, admin } = require('./fbConfig');
 //     console.log('Run Task2 every 10s');
 // });
 
-const addRentExpenseJobCron = '0 0 26 * *'; // On 10th of every month
-const addElectricityExpenseJobCron = '0 0 26 * *'; // On 20th of every month
-const addSalaryExpenseJobCron = '0 0 26 * *'; // On 5th of every month
+// const addRentExpenseJobCron = '30 10 30 * *'; // On 10th of every month
+// const addElectricityExpenseJobCron = '30 10 30 * *'; // On 20th of every month
+// const addSalaryExpenseJobCron = '30 10 30 * *'; // On 5th of every month
 
-const addRentExpenseJob = cron.schedule(addRentExpenseJobCron, async () =>  {
+const addRentExpenseJob = async () =>  {
     const rentExpenseData = {
         type: 'RECURRING',
         category: 'RENT',
@@ -40,10 +40,9 @@ const addRentExpenseJob = cron.schedule(addRentExpenseJobCron, async () =>  {
     } catch (error) {
         console.log('addRentExpenseJob Error: ', error)
     }
-    
-});
+};
 
-const addElectricityExpenseJob = cron.schedule(addElectricityExpenseJobCron, async () =>  {
+const addElectricityExpenseJob = async () =>  {
     const eleExpenseData = {
         type: 'RECURRING',
         category: 'ELECTRICITY',
@@ -79,9 +78,9 @@ const addElectricityExpenseJob = cron.schedule(addElectricityExpenseJobCron, asy
     } catch (error) {
         console.log('addElectricityExpenseJob Error: ', error);
     }
-});
+};
 
-const addSalaryExpenseJob = cron.schedule(addSalaryExpenseJobCron, async () =>  {
+const addSalaryExpenseJob = async () =>  {
 
     let query = db.collection('recurringExpensesOptions');
     query = query.where('category', '==', 'SALARY');
@@ -108,7 +107,7 @@ const addSalaryExpenseJob = cron.schedule(addSalaryExpenseJobCron, async () =>  
     } catch (error) {
         console.log('addSalaryExpenseJob Error: ', error)
     }
-});
+};
 
 module.exports = {
     addRentExpenseJob,

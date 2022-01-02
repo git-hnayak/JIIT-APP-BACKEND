@@ -34,6 +34,34 @@ const updateRecuringExpenseOptions = (req, res) => {
         })
 }
 
+// Get Recurring Expense options
+const getRecuringExpenseOptions = (req, res) => {
+    let query = db.collection('recurringExpensesOptions');
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query
+        .get()
+        .then((data) => {
+           let recurringExpenseOptions = [];
+           data.forEach((doc) => {
+            recurringExpenseOptions.push({
+                   id: doc.id,
+                   ...doc.data()
+               });
+           });
+           return res.json(recurringExpenseOptions);
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+}
+
 // Get Recurring Expenses
 const fetchRecurringExpenses = (req, res) => {
     let query = db.collection('recurringExpenses');
@@ -117,5 +145,6 @@ module.exports = {
     deleteRecurringExpense,
     fetchRecurringExpenses,
     createSalaryExpenseOptions,
-    updateRecuringExpenseOptions
+    updateRecuringExpenseOptions,
+    getRecuringExpenseOptions
 }

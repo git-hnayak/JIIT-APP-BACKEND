@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
 const { FBAuth } = require('./utils/fbAuthMiddleware');
-require('./utils/schedulers');
+const { addRentExpenseJob, addElectricityExpenseJob, addSalaryExpenseJob } = require('./utils/schedulers');
 const {
     userSignin,
     userSignup,
@@ -35,14 +35,17 @@ const {
     createNewExpense,
     fetchAllExpenses,
     updateExpense,
-    deleteExpense
+    deleteExpense,
+    filterExpenses,
+    getExpenseTotalNumbers
 } = require('./handlers/expenses');
 const {
     createSalaryExpenseOptions,
     updateRecuringExpenseOptions,
     createNewRecurringExpense,
     updateRecurringExpense,
-    fetchRecurringExpenses
+    fetchRecurringExpenses,
+    getRecuringExpenseOptions
 } = require('./handlers/recurringExpenses');
 const app = express();
 
@@ -85,6 +88,7 @@ app.post('/expense', FBAuth, createNewExpense);
 app.post('/expense/update', FBAuth, updateExpense);
 app.get('/expense/allexpenses', FBAuth, fetchAllExpenses);
 app.delete('/expense/:id', FBAuth, deleteExpense);
+app.post('/expense/filterexpenses', FBAuth, filterExpenses);
 
 // Recurring Expense Routes
 app.post('/salaryexpenseoption', FBAuth, createSalaryExpenseOptions);
@@ -92,10 +96,18 @@ app.post('/updaterecurringexpenseoptions', FBAuth, updateRecuringExpenseOptions)
 app.post('/createrecurringexpense', FBAuth, createNewRecurringExpense);
 app.post('/updaterecurringexpense', FBAuth, updateRecurringExpense);
 app.get('/fetchrecurringexpense', FBAuth, fetchRecurringExpenses);
+app.get('/getexpensetotalnumbers', FBAuth, getExpenseTotalNumbers);
+app.get('/getrecurringexpenseoptions', FBAuth, getRecuringExpenseOptions);
 
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);
+exports.scheduledFunction = functions.pubsub.schedule('30 7 10 * *').onRun((context) => {
+    addRentExpenseJob();
+    addElectricityExpenseJob();
+    addSalaryExpenseJob();
+    return null;
+});
 
 
 // // Create and Deploy Your First Cloud Functions

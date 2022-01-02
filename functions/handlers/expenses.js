@@ -11,6 +11,7 @@ const fetchAllExpenses = (req, res) => {
         query = query.where('branchLocation', '==', 'KJR');
     }
     query
+        .orderBy('expenseDate', 'desc')
         .get()
         .then((data) => {
            let expenses = [];
@@ -23,6 +24,78 @@ const fetchAllExpenses = (req, res) => {
                });
            });
            return res.json({expenses, totalExpense});
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
+// Filter Expenses
+const filterExpenses = (req, res) => {
+    const expenseCategory = req.body.expenseCategory;
+    const expenseSubCategory = req.body.expenseSubCategory;
+    const expenseBy = req.body.expenseBy;
+
+    let query = db.collection('expenses');
+
+    if (expenseCategory) query = query.where('expenseCategory', '==', expenseCategory);
+    if (expenseSubCategory) query = query.where('expenseSubCategory', '==', expenseSubCategory);
+    if (expenseBy) query = query.where('expenseBy', '==', expenseBy);
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query
+        .orderBy('expenseDate', 'desc')
+        .get()
+        .then((data) => {
+           let expenses = [];
+           let totalExpense = 0;
+           data.forEach((doc) => {
+            totalExpense += Number(doc.data().expenseAmount);
+            expenses.push({
+                   id: doc.id,
+                   ...doc.data()
+               });
+           });
+           return res.json({expenses, totalExpense});
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
+// Get Expenses Numbers
+const getExpenseTotalNumbers = (req, res) => {
+    let query = db.collection('expenses');
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query
+        .get()
+        .then((data) => {
+           let totalGeneralExpense = 0;
+           const totalCategoryExpenseInfo = {};
+
+           data.forEach((doc) => {
+                const expData = doc.data();
+                totalGeneralExpense += Number(expData.expenseAmount);
+                if (totalCategoryExpenseInfo[expData.expenseCategory]) {
+                    totalCategoryExpenseInfo[expData.expenseCategory] += Number(expData.expenseAmount);
+                } else {
+                    totalCategoryExpenseInfo[expData.expenseCategory] = Number(expData.expenseAmount);
+                }
+           });
+           return res.json({totalGeneralExpense, totalCategoryExpenseInfo});
         })
         .catch((err) => {
             res.status(500).json({ message: 'Something went wrong' });
@@ -78,5 +151,7 @@ module.exports = {
     createNewExpense,
     updateExpense,
     deleteExpense,
-    fetchAllExpenses
+    fetchAllExpenses,
+    filterExpenses,
+    getExpenseTotalNumbers
 }
