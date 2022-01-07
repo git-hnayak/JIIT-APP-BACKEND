@@ -218,7 +218,7 @@ const fetchStudentInfoInTotal = (req, res) => {
            let totalDCFAStudents = 0;
            data.forEach((doc) => {
                const studentData = doc.data();
-               const payments = studentData.payment;
+               const payments = studentData.payment || [];
                if (studentData.certificateType === 'REGULAR') {
                 totalRegularStudents += 1;
                }
