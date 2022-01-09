@@ -13,30 +13,39 @@ const { db, admin } = require('./fbConfig');
 // const addElectricityExpenseJobCron = '30 10 30 * *'; // On 20th of every month
 // const addSalaryExpenseJobCron = '30 10 30 * *'; // On 5th of every month
 
+const month = new Date().getMonth()+1;
+const year = new Date().getFullYear();
+
 const addRentExpenseJob = async () =>  {
     const rentExpenseData = {
         type: 'RECURRING',
         category: 'RENT',
-        month: new Date().getMonth()+1,
-        year: new Date().getFullYear(),
+        month,
+        year,
         createdDate: new Date().toISOString(),
         createdBy: 'JIIT SCHEDULER'
     }
 
     let query = db.collection('recurringExpensesOptions');
     query = query.where('category', '==', 'RENT');
+    query = query.where('status', '==', 'ACTIVE');
 
     try {
         const rentExpOpt = await query.get();
-        const rentExpOptData = rentExpOpt.docs[0].data();
-        rentExpenseData.branchLocation = rentExpOptData.branchLocation;
-        rentExpenseData.amount = rentExpOptData.amount;
-        rentExpenseData.expenseBy = rentExpOptData.payerId;
-        rentExpenseData.expenseByName = rentExpOptData.payerName;
-        rentExpenseData.receiver = rentExpOptData.receiver;
+        if (rentExpOpt.docs && rentExpOpt.docs.length > 0) {
+            const rentExpOptData = rentExpOpt.docs[0].data();
+            rentExpenseData.branchLocation = rentExpOptData.branchLocation;
+            rentExpenseData.amount = rentExpOptData.amount;
+            rentExpenseData.expenseBy = rentExpOptData.payerId;
+            rentExpenseData.expenseByName = rentExpOptData.payerName;
+            rentExpenseData.receiver = rentExpOptData.receiver;
 
-        const recurringExpSuccessData = await db.collection('recurringExpenses').add(rentExpenseData);
-        console.log(`Rent Recurring Expense added successfully with id: ${recurringExpSuccessData.id}`);
+            const recurringExpSuccessData = await db.collection('recurringExpenses').add(rentExpenseData);
+            console.log(`Rent Recurring Expense added successfully with id: ${recurringExpSuccessData.id}`);
+        } else {
+            console.log('No Rent Recurring Expense option found to entry');
+        }
+        
     } catch (error) {
         console.log('addRentExpenseJob Error: ', error)
     }
@@ -46,35 +55,41 @@ const addElectricityExpenseJob = async () =>  {
     const eleExpenseData = {
         type: 'RECURRING',
         category: 'ELECTRICITY',
-        month: new Date().getMonth()+1,
-        year: new Date().getFullYear(),
+        month,
+        year,
         createdDate: new Date().toISOString(),
         createdBy: 'JIIT SCHEDULER'
     }
 
     let query = db.collection('recurringExpensesOptions');
     query = query.where('category', '==', 'ELECTRICITY');
+    query = query.where('status', '==', 'ACTIVE');
 
     try {
         const eleExpOpt = await query.get();
-        const eleExpOptData = eleExpOpt.docs[0].data();
-        eleExpenseData.branchLocation = eleExpOptData.branchLocation;
-        eleExpenseData.amount = eleExpOptData.amount;
-        eleExpenseData.expenseBy = eleExpOptData.payerId;
-        eleExpenseData.expenseByName = eleExpOptData.payerName;
-        eleExpenseData.receiver = eleExpOptData.receiver;
+        if (eleExpOpt.docs && eleExpOpt.docs.length > 0) {
+            const eleExpOptData = eleExpOpt.docs[0].data();
+            eleExpenseData.branchLocation = eleExpOptData.branchLocation;
+            eleExpenseData.amount = eleExpOptData.amount;
+            eleExpenseData.expenseBy = eleExpOptData.payerId;
+            eleExpenseData.expenseByName = eleExpOptData.payerName;
+            eleExpenseData.receiver = eleExpOptData.receiver;
 
-        let queryRecExp = db.collection('recurringExpenses');
-        queryRecExp = queryRecExp.where('category', '==', 'ELECTRICITY');
+            let queryRecExp = db.collection('recurringExpenses');
+            queryRecExp = queryRecExp.where('category', '==', 'ELECTRICITY');
 
-        const allEleExpensesRes = await queryRecExp.get();
-        const allEleExpensesData = allEleExpensesRes.docs.map((expEle) => expEle.data());
-        const eleExpFilterData = allEleExpensesData.filter(expEleFilterData => (expEleFilterData.month === new Date().getMonth()+1) &&  (expEleFilterData.year === new Date().getFullYear()));
+            const allEleExpensesRes = await queryRecExp.get();
+            const allEleExpensesData = allEleExpensesRes.docs.map((expEle) => expEle.data());
+            const eleExpFilterData = allEleExpensesData.filter(expEleFilterData => (expEleFilterData.month === new Date().getMonth()+1) &&  (expEleFilterData.year === new Date().getFullYear()));
 
-        if (eleExpFilterData.length === 0) {
-            const recurringExpSuccessData = await db.collection('recurringExpenses').add(eleExpenseData);
-            console.log(`Electricity Recurring Expense added successfully with id: ${recurringExpSuccessData.id}`);
+            if (eleExpFilterData.length === 0) {
+                const recurringExpSuccessData = await db.collection('recurringExpenses').add(eleExpenseData);
+                console.log(`Electricity Recurring Expense added successfully with id: ${recurringExpSuccessData.id}`);
+            }
+        } else {
+            console.log('No Electricity Recurring Expense option found to entry');
         }
+        
     } catch (error) {
         console.log('addElectricityExpenseJob Error: ', error);
     }
@@ -84,6 +99,7 @@ const addSalaryExpenseJob = async () =>  {
 
     let query = db.collection('recurringExpensesOptions');
     query = query.where('category', '==', 'SALARY');
+    query = query.where('status', '==', 'ACTIVE');
 
     try {
         const salaryExpOpt = await query.get();
@@ -92,8 +108,9 @@ const addSalaryExpenseJob = async () =>  {
             const salaryExpenseData = {
                 type: 'RECURRING',
                 category: 'SALARY',
-                month: new Date().getMonth()+1,
-                year: new Date().getFullYear(),
+                branchLocation: salaryExpOptData.branchLocation,
+                month,
+                year,
                 amount: salaryExpOptData.amount,
                 expenseBy: salaryExpOptData.payerId,
                 expenseByName: salaryExpOptData.payerName,

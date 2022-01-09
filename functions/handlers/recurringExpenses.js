@@ -76,12 +76,14 @@ const fetchRecurringExpenses = (req, res) => {
     if (req.body.expenseBy) query = query.where('expenseBy', '==', req.body.expenseBy);
 
     query
+        .orderBy('year', 'desc')
+        .orderBy('month', 'desc')
         .get()
         .then((data) => {
            let expenses = [];
            let totalExpense = 0;
            data.forEach((doc) => {
-            totalExpense += Number(doc.data().expenseAmount);
+            totalExpense += Number(doc.data().amount);
             expenses.push({
                    id: doc.id,
                    ...doc.data()
@@ -139,6 +141,39 @@ const deleteRecurringExpense = (req, res) => {
         })
 };
 
+// Get Recurring Expenses Numbers
+const getRecurringExpenseTotalNumbers = (req, res) => {
+    let query = db.collection('recurringExpenses');
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query
+        .get()
+        .then((data) => {
+           let totalRecurringExpense = 0;
+           const totalRecurringCategoryExpenseInfo = {};
+
+           data.forEach((doc) => {
+                const expData = doc.data();
+                totalRecurringExpense += Number(expData.amount);
+                if (totalRecurringCategoryExpenseInfo[expData.category]) {
+                    totalRecurringCategoryExpenseInfo[expData.category] += Number(expData.amount);
+                } else {
+                    totalRecurringCategoryExpenseInfo[expData.category] = Number(expData.amount);
+                }
+           });
+           return res.json({totalRecurringExpense, totalRecurringCategoryExpenseInfo});
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
 module.exports = {
     createNewRecurringExpense,
     updateRecurringExpense,
@@ -146,5 +181,6 @@ module.exports = {
     fetchRecurringExpenses,
     createSalaryExpenseOptions,
     updateRecuringExpenseOptions,
-    getRecuringExpenseOptions
+    getRecuringExpenseOptions,
+    getRecurringExpenseTotalNumbers
 }

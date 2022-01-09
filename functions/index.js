@@ -45,8 +45,16 @@ const {
     createNewRecurringExpense,
     updateRecurringExpense,
     fetchRecurringExpenses,
-    getRecuringExpenseOptions
+    getRecuringExpenseOptions,
+    getRecurringExpenseTotalNumbers
 } = require('./handlers/recurringExpenses');
+
+const {
+    fetchMonthlyStudentsAndPayment,
+    fetchMonthlyRecurringExpenses,
+    fetchMonthlyGeneralExpenses
+} = require('./handlers/profitvsloss');
+
 const app = express();
 
 app.use(cors());
@@ -89,16 +97,21 @@ app.post('/expense/update', FBAuth, updateExpense);
 app.get('/expense/allexpenses', FBAuth, fetchAllExpenses);
 app.delete('/expense/:id', FBAuth, deleteExpense);
 app.post('/expense/filterexpenses', FBAuth, filterExpenses);
+app.get('/getexpensetotalnumbers', FBAuth, getExpenseTotalNumbers);
 
 // Recurring Expense Routes
 app.post('/salaryexpenseoption', FBAuth, createSalaryExpenseOptions);
 app.post('/updaterecurringexpenseoptions', FBAuth, updateRecuringExpenseOptions);
 app.post('/createrecurringexpense', FBAuth, createNewRecurringExpense);
 app.post('/updaterecurringexpense', FBAuth, updateRecurringExpense);
-app.get('/fetchrecurringexpense', FBAuth, fetchRecurringExpenses);
-app.get('/getexpensetotalnumbers', FBAuth, getExpenseTotalNumbers);
+app.post('/fetchrecurringexpense', FBAuth, fetchRecurringExpenses);
+app.get('/getrecurringexpensetotalnumbers', FBAuth, getRecurringExpenseTotalNumbers);
 app.get('/getrecurringexpenseoptions', FBAuth, getRecuringExpenseOptions);
 
+// Profit vs Losses
+app.post('/getmonthlystudentandpayment', FBAuth, fetchMonthlyStudentsAndPayment);
+app.post('/getmonthlygeneralexpenses', FBAuth, fetchMonthlyGeneralExpenses);
+app.post('/getmonthlyrecurringexpenses', FBAuth, fetchMonthlyRecurringExpenses);
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);
@@ -108,7 +121,6 @@ exports.scheduledFunction = functions.pubsub.schedule('30 7 10 * *').onRun((cont
     addSalaryExpenseJob();
     return null;
 });
-
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions

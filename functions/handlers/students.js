@@ -33,6 +33,7 @@ const fetchRecentStudents = (req, res) => {
         query = query.where('branchLocation', '==', 'KJR');
     }
     query
+        .orderBy('firstName', 'asc')
         .get()
         .then((data) => {
            let students = [];
