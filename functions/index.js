@@ -52,7 +52,9 @@ const {
 const {
     fetchMonthlyStudentsAndPayment,
     fetchMonthlyRecurringExpenses,
-    fetchMonthlyGeneralExpenses
+    fetchMonthlyGeneralExpenses,
+    fetchMonthlyGainForYear,
+    fetchMonthlyExpenseForYear
 } = require('./handlers/profitvsloss');
 
 const app = express();
@@ -112,6 +114,8 @@ app.get('/getrecurringexpenseoptions', FBAuth, getRecuringExpenseOptions);
 app.post('/getmonthlystudentandpayment', FBAuth, fetchMonthlyStudentsAndPayment);
 app.post('/getmonthlygeneralexpenses', FBAuth, fetchMonthlyGeneralExpenses);
 app.post('/getmonthlyrecurringexpenses', FBAuth, fetchMonthlyRecurringExpenses);
+app.post('/getmonthlygainforyear', FBAuth, fetchMonthlyGainForYear);
+app.post('/getmonthlyexpenseforyear', FBAuth, fetchMonthlyExpenseForYear);
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);

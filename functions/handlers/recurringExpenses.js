@@ -122,7 +122,7 @@ const updateRecurringExpense = (req, res) => {
     expenseDetails.modifiedBy = req.user.firstName + ' ' + req.user.lastName;
     db.doc(`/recurringExpenses/${expenseDetails.id}`).update(expenseDetails)
         .then(() => {
-            return res.json({ message: 'Expense updated successfully' });
+            return res.json({ message: 'Recurring expense updated successfully' });
         })
         .catch(error => {
             res.status(500).json({ error });
