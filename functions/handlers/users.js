@@ -180,11 +180,32 @@ const fetchCounters = (req, res) => {
         })
 }
 
+// Send Password Reset Email
+const sendPasswordResetEmail = (req, res) => {
+    const email = req.body.email;
+    
+    firebase.auth().sendPasswordResetEmail(email)
+        .then((data) => {
+            return res.json({ message: 'Password reset email has been sent successfully' });
+        })
+        .catch(err => {
+            if (err.code === 'auth/wrong-password') {
+                return res.status(400).json({ message: 'Wrong credential, please try again' });
+            } else if (err.code === 'auth/user-not-found') {
+                return res.status(400).json({ message: 'Email not found' });
+            } else if (err.code === 'auth/invalid-email') {
+                return res.status(400).json({ message: 'Invalid email' });
+            }
+            return res.status(500).json({ message: err.code })
+        })
+}
+
 module.exports = {
     userSignin,
     userSignup,
     getAllUsers,
     getAuthenticatedUser,
     fetchCounters,
-    updateUserDetails
+    updateUserDetails,
+    sendPasswordResetEmail
 }

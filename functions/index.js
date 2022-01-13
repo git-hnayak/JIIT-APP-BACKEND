@@ -9,7 +9,8 @@ const {
     getAllUsers,
     getAuthenticatedUser,
     fetchCounters,
-    updateUserDetails
+    updateUserDetails,
+    sendPasswordResetEmail
 } = require('./handlers/users');
 const {
     fetchAllStudents,
@@ -71,6 +72,7 @@ app.post('/signin', userSignin);
 app.post('/user', FBAuth, updateUserDetails);
 app.get('/allusers', FBAuth, getAllUsers);
 app.get('/loggeduser', FBAuth, getAuthenticatedUser);
+app.post('/sendpwdresetemail', sendPasswordResetEmail);
 
 // Student Routes
 app.get('/allStudents', FBAuth, fetchAllStudents);

@@ -21,6 +21,7 @@ const FBAuth = (req, res, next) => {
             req.user.firstName = data.docs[0].data().firstName;
             req.user.lastName = data.docs[0].data().lastName;
             req.user.role = data.docs[0].data().role;
+            req.user.email = data.docs[0].data().email;
             return next();
         })
         .catch(err => {
