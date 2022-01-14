@@ -61,11 +61,11 @@ const getCourseFee = (course, branch, discount) => {
 }
 
 const getBranchLocation = (userRole) => {
-    if (userRole === 'JIIT_BDK_ADMIN') {
+    if (userRole === 'JIIT_BDK_ADMIN' || userRole === 'JIIT_BDK_SUPERVISOR') {
         return 'BDK';
     }
 
-    if (userRole === 'JIIT_KJR_ADMIN') {
+    if (userRole === 'JIIT_KJR_ADMIN' || userRole === 'JIIT_KJR_SUPERVISOR') {
         return 'KJR';
     }
 

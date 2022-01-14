@@ -27,9 +27,9 @@ const fetchAllStudents = (req, res) => {
 const fetchRecentStudents = (req, res) => {
     let query = db.collection('students');
 
-    if (req.user.role === 'JIIT_BDK_ADMIN') {
+    if (req.user.role === 'JIIT_BDK_ADMIN' || req.user.role === 'JIIT_BDK_SUPERVISOR') {
         query = query.where('branchLocation', '==', 'BDK');
-    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+    } else if (req.user.role === 'JIIT_KJR_ADMIN' || req.user.role === 'JIIT_KJR_SUPERVISOR') {
         query = query.where('branchLocation', '==', 'KJR');
     }
     query
@@ -195,6 +195,29 @@ const createAppliedStudent = (req, res) => {
         });
 };
 
+// Get Applied Students
+const fetchAppliedStudents = (req, res) => {
+    let query = db.collection('appliedStudents');
+    query = query.where('status', '==', 'NEW');
+
+    query
+        .get()
+        .then((data) => {
+           let appliedStudents = [];
+           data.forEach((doc) => {
+                appliedStudents.push({
+                   id: doc.id,
+                   ...doc.data()
+               });
+           });
+           return res.json(appliedStudents);
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
 // Update Student
 const updateStudent = (req, res) => {
     const studentData = req.body;
@@ -312,5 +335,6 @@ module.exports = {
     fetchAllStudentsByBranchAndCertType,
     fetchStudentsByQuery,
     fetchStudentInfoInTotal,
-    createAppliedStudent
+    createAppliedStudent,
+    fetchAppliedStudents
 }

@@ -21,7 +21,8 @@ const {
     fetchAllStudentsByBranchAndCertType,
     fetchStudentsByQuery,
     fetchStudentInfoInTotal,
-    createAppliedStudent
+    createAppliedStudent,
+    fetchAppliedStudents
 } = require('./handlers/students');
 const {
     sarvaRegistrationProgress,
@@ -85,6 +86,7 @@ app.post('/student/bybranchandcertType', FBAuth, fetchAllStudentsByBranchAndCert
 app.post('/student/byquery', FBAuth, fetchStudentsByQuery);
 app.get('/studentinfointotal', FBAuth, fetchStudentInfoInTotal);
 app.post('/student/apply', createAppliedStudent);
+app.get('/appliedstudents', FBAuth, fetchAppliedStudents);
 
 // Student Sarva Regd Progress
 app.post('/sarvaregdprogress', FBAuth, sarvaRegistrationProgress);
