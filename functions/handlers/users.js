@@ -79,7 +79,7 @@ const userSignin = (req, res) => {
     firebase.auth().signInWithEmailAndPassword(user.email, user.password)
         .then((data) => {
             console.log('Loggedin User: ', data.user);
-            return data.user.getIdToken();
+            return data.user.getIdToken(true);
         })
         .then((token) => {
             return res.json({ token })

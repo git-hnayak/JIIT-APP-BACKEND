@@ -179,6 +179,22 @@ const createNewStudent = (req, res) => {
         });
 };
 
+// Create Applied Student
+const createAppliedStudent = (req, res) => {
+    const appliedStudent = req.body;
+    appliedStudent.createdDate = new Date().toISOString();
+    appliedStudent.status = 'NEW';
+
+    db.collection('appliedStudents').add(appliedStudent)
+        .then((doc) => {
+            studentId = doc.id;
+            return res.json({ message: `Student created successfully with id: ${studentId}` });
+        })
+        .catch((err) => {
+            res.status(500).json({ err: err.code });
+        });
+};
+
 // Update Student
 const updateStudent = (req, res) => {
     const studentData = req.body;
@@ -217,6 +233,8 @@ const fetchStudentInfoInTotal = (req, res) => {
            let totalADCFAStudents = 0;
            let totalDCAStudents = 0;
            let totalDCFAStudents = 0;
+           let totalStudentsCourseFees = 0;
+           let totalCourseFeesToBePaid = 0;
            data.forEach((doc) => {
                const studentData = doc.data();
                const payments = studentData.payment || [];
@@ -250,12 +268,15 @@ const fetchStudentInfoInTotal = (req, res) => {
                if (studentData.course === 'DCA') {
                 totalDCAStudents += 1;
                }
+               if (studentData.courseFee && Number(studentData.courseFee) > 0) {
+                totalStudentsCourseFees += Number(studentData.courseFee);
+               }
                let stdPayCount = 0;
                payments.forEach((payment) => {
                 totalPayment += Number(payment.amount);
                 stdPayCount += Number(payment.amount);
                })
-               if (stdPayCount < studentData.courseFee) {
+               if (stdPayCount < Number(studentData.courseFee)) {
                 totalCourseFeeNotCompleted += 1;
                }
            });
@@ -271,7 +292,8 @@ const fetchStudentInfoInTotal = (req, res) => {
                 totalADCAStudents,
                 totalADCFAStudents,
                 totalDCAStudents,
-                totalDCFAStudents
+                totalDCFAStudents,
+                totalCourseFeesToBePaid: totalStudentsCourseFees - totalPayment
            });
         })
         .catch((err) => {
@@ -289,5 +311,6 @@ module.exports = {
     fetchStudentById,
     fetchAllStudentsByBranchAndCertType,
     fetchStudentsByQuery,
-    fetchStudentInfoInTotal
+    fetchStudentInfoInTotal,
+    createAppliedStudent
 }
