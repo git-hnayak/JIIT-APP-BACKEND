@@ -130,7 +130,24 @@ const fetchStudentById = (req, res) => {
             res.status(500).json({ message: 'Something went wrong' });
             console.log('Error: ', err);
         });
-} 
+}
+
+// Admit applied students after successful creation
+const admitAppliedStudents = (appliedStudentId, res) => {
+        const appliedStudentData = {
+            status: 'ADMITED',
+            admissionDate: new Date().toISOString(),
+            admitedBy: req.user.firstName + ' ' + req.user.lastName
+        }
+
+        db.doc(`/appliedStudents/${appliedStudentId}`).update(appliedStudentData)
+        .then(() => {
+            return res.json({ message: 'Student admission processed successfully!' });
+        })
+        .catch(error => {
+            res.status(500).json({ error });
+        })
+}
 
 // Create New Student
 const createNewStudent = (req, res) => {
@@ -171,6 +188,9 @@ const createNewStudent = (req, res) => {
             return db.collection('counters').doc(counterRecord.id).update(counterRecord);
         })
         .then(() => {
+            if (newStudent.appliedStudentsId) {
+                return admitAppliedStudents(newStudent.appliedStudentsId, res);
+            }
             return res.json({ message: `Student created successfully with id: ${studentId}` });
         })
         .catch((err) => {
@@ -194,6 +214,36 @@ const createAppliedStudent = (req, res) => {
             res.status(500).json({ err: err.code });
         });
 };
+
+// Reject applied students
+const rejectAppliedStudents = (req, res) => {
+    const appliedStudentsId = req.params.id;
+    const appliedStudentData = {
+        status: 'REJECTED',
+        rejectedDate: new Date().toISOString(),
+        rejectedBy: req.user.firstName + ' ' + req.user.lastName
+    }
+
+    db.doc(`/appliedStudents/${appliedStudentsId}`).update(appliedStudentData)
+    .then(() => {
+        return res.json({ message: 'Student admission rejected successfully!' });
+    })
+    .catch(error => {
+        res.status(500).json({ error });
+    })
+}
+
+// Delete Applied Student
+const deleteAppliedStudents = (req, res) => {
+    const appliedStudentsId = req.params.id;
+    db.doc(`/appliedStudents/${appliedStudentsId}`).delete()
+        .then(() => {
+            return res.json({ message: 'Applied student deleted successfully' });
+        })
+        .catch(error => {
+            res.status(500).json({ error });
+        })
+}
 
 // Get Applied Students
 const fetchAppliedStudents = (req, res) => {
@@ -336,5 +386,7 @@ module.exports = {
     fetchStudentsByQuery,
     fetchStudentInfoInTotal,
     createAppliedStudent,
-    fetchAppliedStudents
+    fetchAppliedStudents,
+    rejectAppliedStudents,
+    deleteAppliedStudents
 }
