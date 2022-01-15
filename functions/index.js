@@ -58,7 +58,9 @@ const {
     fetchMonthlyRecurringExpenses,
     fetchMonthlyGeneralExpenses,
     fetchMonthlyGainForYear,
-    fetchMonthlyExpenseForYear
+    fetchMonthlyExpenseForYear,
+    fetchQuarterGainForYear,
+    fetchQuarterRecurringExpenses
 } = require('./handlers/profitvsloss');
 
 const app = express();
@@ -124,6 +126,8 @@ app.post('/getmonthlygeneralexpenses', FBAuth, fetchMonthlyGeneralExpenses);
 app.post('/getmonthlyrecurringexpenses', FBAuth, fetchMonthlyRecurringExpenses);
 app.post('/getmonthlygainforyear', FBAuth, fetchMonthlyGainForYear);
 app.post('/getmonthlyexpenseforyear', FBAuth, fetchMonthlyExpenseForYear);
+app.post('/fetchquartergainforyear', FBAuth, fetchQuarterGainForYear);
+app.post('/fetchquarterrecurringexpenses', FBAuth, fetchQuarterRecurringExpenses)
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);
