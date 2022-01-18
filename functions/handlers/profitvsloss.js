@@ -1,4 +1,5 @@
 const { db, admin } = require('../utils/fbConfig');
+const { getBranchLocation } = require('../utils/misc');
 
 // Get Monthly Students
 const fetchMonthlyStudentsAndPayment = (req, res) => {
@@ -140,7 +141,7 @@ const fetchQuarterGainForYear = (req, res) => {
         });
 };
 
-// Get Monthly Expenses
+// Get Monthly General Expenses
 const fetchMonthlyGeneralExpenses = (req, res) => {
     const month = req.body.month;
     const year = req.body.year;
@@ -170,6 +171,72 @@ const fetchMonthlyGeneralExpenses = (req, res) => {
                 }
            });
            return res.json({ generalExpenses, totalGeneralExpenses });
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
+// Get Quarterly General Expenses
+const fetchQuarterlyGeneralExpenses = (req, res) => {
+    const quarter = req.body.quarter;
+    const year = req.body.year;
+
+    let quarterArray = [];
+
+    if (quarter === 'q1') {
+        quarterArray = [0, 1, 2];
+    } else if (quarter === 'q2') {
+        quarterArray = [3, 4, 5];
+    } else if (quarter === 'q3') {
+        quarterArray = [6, 7, 8];
+    } else if (quarter === 'q4') {
+        quarterArray = [9, 10, 11];
+    }
+
+    let query = db.collection('expenses');
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+    query
+        .get()
+        .then((data) => {
+           let generalExpenses = [];
+           let totalGeneralExpenses = 0;
+           const totalCategoryExpenseInfo = {};
+           const totalSubCategoryExpenseInfo = {};
+           data.forEach((doc) => {
+                const expenseData = doc.data();
+                const payMonth = new Date(expenseData.expenseDate).getMonth();
+                const payYear = new Date(expenseData.expenseDate).getFullYear();
+
+                if (payYear === year) {
+                    if (quarterArray.indexOf(payMonth) > -1) {
+                        totalGeneralExpenses += Number(expenseData.expenseAmount);
+                        generalExpenses.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+
+                        if (totalCategoryExpenseInfo[expenseData.expenseCategory]) {
+                            totalCategoryExpenseInfo[expenseData.expenseCategory] += Number(expenseData.expenseAmount);
+                        } else {
+                            totalCategoryExpenseInfo[expenseData.expenseCategory] = Number(expenseData.expenseAmount);
+                        }
+
+                        if (totalSubCategoryExpenseInfo[expenseData.expenseSubCategory]) {
+                            totalSubCategoryExpenseInfo[expenseData.expenseSubCategory] += Number(expenseData.expenseAmount);
+                        } else {
+                            totalSubCategoryExpenseInfo[expenseData.expenseSubCategory] = Number(expenseData.expenseAmount);
+                        }
+                    }
+                }
+           });
+           return res.json({ generalExpenses, totalGeneralExpenses, totalCategoryExpenseInfo, totalSubCategoryExpenseInfo });
         })
         .catch((err) => {
             res.status(500).json({ message: 'Something went wrong' });
@@ -324,6 +391,21 @@ const fetchMonthlyExpenseForYear = (req, res) => {
         });
 };
 
+const createQuarterlyProfitLossForInvestors = (req, res) => {
+    const profitLossData = req.body;
+    profitLossData.branchLocation = getBranchLocation(req.user.role);
+    profitLossData.auditDate = new Date().toISOString();
+
+    db.collection('profitLoss').add(profitLossData)
+    .then((doc) => {
+        return res.json({ message: `Your settlement added successfully with id: ${doc.id}` });
+    })
+    .catch((err) => {
+        res.status(500).json({ err: err.code });
+        console.log('Error: ', err);
+    });
+}
+
 
 module.exports = {
     fetchMonthlyStudentsAndPayment,
@@ -332,5 +414,7 @@ module.exports = {
     fetchMonthlyGainForYear,
     fetchMonthlyExpenseForYear,
     fetchQuarterGainForYear,
-    fetchQuarterRecurringExpenses
+    fetchQuarterRecurringExpenses,
+    fetchQuarterlyGeneralExpenses,
+    createQuarterlyProfitLossForInvestors
 }

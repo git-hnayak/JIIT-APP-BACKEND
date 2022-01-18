@@ -1,5 +1,5 @@
 const { db, admin } = require('../utils/fbConfig');
-const { getCourseFee, getBranchLocation } = require('../utils/misc');
+const { getBranchLocation } = require('../utils/misc');
 
 // Get All Students
 const fetchAllStudents = (req, res) => {
