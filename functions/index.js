@@ -62,7 +62,8 @@ const {
     fetchQuarterGainForYear,
     fetchQuarterRecurringExpenses,
     fetchQuarterlyGeneralExpenses,
-    createQuarterlyProfitLossForInvestors
+    createQuarterlyProfitLossForInvestors,
+    fetchQuarterlyProfitLossForInvestors
 } = require('./handlers/profitvsloss');
 
 const app = express();
@@ -132,6 +133,7 @@ app.post('/fetchquartergainforyear', FBAuth, fetchQuarterGainForYear);
 app.post('/fetchquarterrecurringexpenses', FBAuth, fetchQuarterRecurringExpenses)
 app.post('/fetchquarterlygeneralexpenses', FBAuth, fetchQuarterlyGeneralExpenses);
 app.post('/auditquarterlyprofitloss', FBAuth, createQuarterlyProfitLossForInvestors);
+app.post('/fetchquarterlyprofitlossforinvestors', FBAuth, fetchQuarterlyProfitLossForInvestors)
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);

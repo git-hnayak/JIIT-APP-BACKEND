@@ -406,6 +406,37 @@ const createQuarterlyProfitLossForInvestors = (req, res) => {
     });
 }
 
+const fetchQuarterlyProfitLossForInvestors = (req, res) => {
+    const { quarter, year } = req.body;
+    let query = db.collection('profitLoss');
+
+    query = query.where('quarter', '==', quarter);
+    query = query.where('year', '==', year);
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query
+        .get()
+        .then((data) => {
+           const profitLoss = [];
+           data.forEach((doc) => {
+            profitLoss.push({
+                   id: doc.id,
+                   ...doc.data()
+               });
+           });
+           return res.json(profitLoss);
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+}
+
 
 module.exports = {
     fetchMonthlyStudentsAndPayment,
@@ -416,5 +447,6 @@ module.exports = {
     fetchQuarterGainForYear,
     fetchQuarterRecurringExpenses,
     fetchQuarterlyGeneralExpenses,
-    createQuarterlyProfitLossForInvestors
+    createQuarterlyProfitLossForInvestors,
+    fetchQuarterlyProfitLossForInvestors
 }
