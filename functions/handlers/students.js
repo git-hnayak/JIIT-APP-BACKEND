@@ -79,19 +79,27 @@ const fetchAllStudentsByBranchAndCertType = (req, res) => {
 
 // Get Students by query
 const fetchStudentsByQuery = (req, res) => {
-    const branchLoc = req.body.branchLocation;
-    const certType = req.body.certificateType;
-    const course = req.body.course;
-    const name = req.body.name;
-    const jiitRegdNumber = req.body.jiitRegdNumber;
-    const sarvaRollNumber = req.body.sarvaRollNumber;
+
+    const {
+        certificateType,
+        course,
+        firstName,
+        jiitRegdNumber,
+        sarvaRollNumber,
+        advancePayQuery
+    } = req.body;
 
     let query = db.collection('students');
 
-    if (branchLoc) query = query.where('branchLocation', '==', branchLoc);
-    if (certType) query = query.where('certificateType', '==', certType);
+    if (req.user.role === 'JIIT_BDK_ADMIN' || req.user.role === 'JIIT_BDK_SUPERVISOR') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN' || req.user.role === 'JIIT_KJR_SUPERVISOR') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+    
+    if (certificateType) query = query.where('certificateType', '==', certificateType);
     if (course) query = query.where('course', '==', course);
-    if (name) query = query.where('name', '==', name);
+    if (firstName) query = query.where('firstName', '==', firstName);
     if (jiitRegdNumber) query = query.where('jiitRegdNumber', '==', jiitRegdNumber);
     if (sarvaRollNumber) query = query.where('sarvaRollNumber', '==', sarvaRollNumber);
 
@@ -100,10 +108,36 @@ const fetchStudentsByQuery = (req, res) => {
         .then((data) => {
            let students = [];
            data.forEach((doc) => {
-               students.push({
-                   id: doc.id,
-                   ...doc.data()
-               });
+                const studentData = doc.data();
+                const payments = studentData.payment || [];
+                const courseFee = Number(studentData.courseFee);
+                if (advancePayQuery) {
+                    let totalStdPayment = 0;
+                    payments.forEach((payment) => {
+                        totalStdPayment += Number(payment.amount);
+                    });
+                    if (advancePayQuery === 'SARVA_ELIGIBLE') {
+                        const courseFeeFiftyPercent = (courseFee/100) * 50;
+                        if (totalStdPayment >= courseFeeFiftyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR') {
+                            students.push({
+                                id: doc.id,
+                                ...doc.data()
+                            });
+                        }
+                    } else if (advancePayQuery === 'COURSE_FEE_PENDING') {
+                        if (totalStdPayment < courseFee) {
+                            students.push({
+                                id: doc.id,
+                                ...doc.data()
+                            });
+                        }
+                    }
+                } else {
+                    students.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                }
            });
            return res.json(students);
         })

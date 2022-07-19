@@ -56,6 +56,30 @@ const userSignup = (req, res) => {
       });
 };
 
+// Signup
+const phoneSignup = async (req, res) => {
+    const reqData = req.body;
+    // console.log('Phone signup req data: ', reqData);
+    const userData = {
+        userID: reqData.user.uid,
+        phoneNumber: reqData.user.phoneNumber,
+        userType: 'PROD',
+        signinMethod: 'phone',
+        createdDate: new Date().toISOString()
+    }
+
+    try {
+        if (reqData._tokenResponse.isNewUser) {
+            await db.collection('users').add(userData);
+            return res.json({ message: 'User added successfully' });
+        } else {
+            return res.json({ message: 'Phone already exist' });
+        }
+    } catch (error) {
+        return res.status(500).json({ error })
+    }
+};
+
 const userSignin = (req, res) => {
     const user = {
         email: req.body.email,
@@ -78,7 +102,7 @@ const userSignin = (req, res) => {
 
     firebase.auth().signInWithEmailAndPassword(user.email, user.password)
         .then((data) => {
-            console.log('Loggedin User: ', data.user);
+            // console.log('Loggedin User: ', data.user);
             return data.user.getIdToken(true);
         })
         .then((token) => {
@@ -102,7 +126,7 @@ const getAllUsers = (req, res) => {
         .where('userType', '==', 'PROD')
         .get()
         .then((data) => {
-            console.log('User Data: ', data);
+            // console.log('User Data: ', data);
            let users = [];
            data.forEach((doc) => {
                users.push({
@@ -119,7 +143,10 @@ const getAllUsers = (req, res) => {
 };
 
 const getAuthenticatedUser = (req, res) => {
-    db.collection('users').doc(req.user._id).get()
+    db.doc(`/users/${req.user._id}`).update({ lastSigninDate: new Date().toISOString() })
+        .then(() => {
+            return db.collection('users').doc(req.user._id).get()
+        })
         .then(doc => {
             return res.json({
                 id: doc.id,
@@ -203,6 +230,7 @@ const sendPasswordResetEmail = (req, res) => {
 module.exports = {
     userSignin,
     userSignup,
+    phoneSignup,
     getAllUsers,
     getAuthenticatedUser,
     fetchCounters,

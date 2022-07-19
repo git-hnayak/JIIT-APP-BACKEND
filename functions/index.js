@@ -10,7 +10,8 @@ const {
     getAuthenticatedUser,
     fetchCounters,
     updateUserDetails,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    phoneSignup
 } = require('./handlers/users');
 const {
     fetchAllStudents,
@@ -41,7 +42,8 @@ const {
     updateExpense,
     deleteExpense,
     filterExpenses,
-    getExpenseTotalNumbers
+    getExpenseTotalNumbers,
+    getJiitFundBalance
 } = require('./handlers/expenses');
 const {
     createSalaryExpenseOptions,
@@ -52,6 +54,9 @@ const {
     getRecuringExpenseOptions,
     getRecurringExpenseTotalNumbers
 } = require('./handlers/recurringExpenses');
+const {
+    fetchMyPortfolio
+} = require('./handlers/portfolio');
 
 const {
     fetchMonthlyStudentsAndPayment,
@@ -63,6 +68,10 @@ const {
     fetchQuarterRecurringExpenses,
     fetchQuarterlyGeneralExpenses,
     createQuarterlyProfitLossForInvestors,
+    getProfitEntries,
+    createProfitEntry,
+    updateProfitEntry,
+    deleteProfitEntry,
     fetchQuarterlyProfitLossForInvestors
 } = require('./handlers/profitvsloss');
 
@@ -81,6 +90,7 @@ app.post('/user', FBAuth, updateUserDetails);
 app.get('/allusers', FBAuth, getAllUsers);
 app.get('/loggeduser', FBAuth, getAuthenticatedUser);
 app.post('/sendpwdresetemail', sendPasswordResetEmail);
+app.post('/phonesignup', phoneSignup);
 
 // Student Routes
 app.get('/allStudents', FBAuth, fetchAllStudents);
@@ -113,6 +123,7 @@ app.get('/expense/allexpenses', FBAuth, fetchAllExpenses);
 app.delete('/expense/:id', FBAuth, deleteExpense);
 app.post('/expense/filterexpenses', FBAuth, filterExpenses);
 app.get('/getexpensetotalnumbers', FBAuth, getExpenseTotalNumbers);
+app.get('/getjiitaccountfundbalance', FBAuth, getJiitFundBalance);
 
 // Recurring Expense Routes
 app.post('/salaryexpenseoption', FBAuth, createSalaryExpenseOptions);
@@ -134,6 +145,13 @@ app.post('/fetchquarterrecurringexpenses', FBAuth, fetchQuarterRecurringExpenses
 app.post('/fetchquarterlygeneralexpenses', FBAuth, fetchQuarterlyGeneralExpenses);
 app.post('/auditquarterlyprofitloss', FBAuth, createQuarterlyProfitLossForInvestors);
 app.post('/fetchquarterlyprofitlossforinvestors', FBAuth, fetchQuarterlyProfitLossForInvestors)
+app.post('/getplentries', FBAuth, getProfitEntries);
+app.post('/addprofitentry', FBAuth, createProfitEntry);
+app.post('/updateprofitentry', FBAuth, updateProfitEntry);
+app.delete('/profitentry/:id', FBAuth, deleteProfitEntry);
+
+// Portfolio Routes
+app.post('/myportfolio', FBAuth, fetchMyPortfolio);
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);

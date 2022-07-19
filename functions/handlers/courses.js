@@ -2,7 +2,7 @@ const { db, admin } = require('../utils/fbConfig');
 const { getBranchLocation } = require('../utils/misc');
 
 // Get All Courses
-const fetchAllCourses = (req, res) => {
+const fetchAllCourses = async (req, res) => {
     let query = db.collection('courses');
 
     if (req.user.role === 'JIIT_BDK_ADMIN') {
@@ -10,22 +10,21 @@ const fetchAllCourses = (req, res) => {
     } else if (req.user.role === 'JIIT_KJR_ADMIN') {
         query = query.where('branchLocation', '==', 'KJR');
     }
-    query
-        .get()
-        .then((data) => {
-           let courses = [];
+
+    try {
+        const data = await query.get();
+        let courses = [];
            data.forEach((doc) => {
             courses.push({
                    id: doc.id,
                    ...doc.data()
                });
            });
-           return res.json(courses);
-        })
-        .catch((err) => {
-            res.status(500).json({ message: 'Something went wrong' });
-            console.log('Error: ', err);
-        });
+        return res.json(courses);
+    } catch (err) {
+        console.log('Error: ', err);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
 };
 
 // Get Courses by branch location
@@ -70,17 +69,16 @@ const createNewCourse = (req, res) => {
 };
 
 // Update Courses
-const updateCourse = (req, res) => {
+const updateCourse = async (req, res) => {
     const courseDetails = req.body;
     courseDetails.modifiedDate = new Date().toISOString();
     courseDetails.modifiedBy = req.user.firstName + ' ' + req.user.lastName;
-    db.doc(`/courses/${courseDetails.id}`).update(courseDetails)
-        .then(() => {
-            return res.json({ message: 'Course updated successfully' });
-        })
-        .catch(error => {
-            res.status(500).json({ error });
-        })
+    try {
+        await db.doc(`/courses/${courseDetails.id}`).update(courseDetails);
+        return res.json({ message: 'Course updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error });
+    }
 };
 
 module.exports = {

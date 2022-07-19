@@ -158,19 +158,23 @@ const fetchMonthlyGeneralExpenses = (req, res) => {
         .then((data) => {
            let generalExpenses = [];
            let totalGeneralExpenses = 0;
+           let totalGenExpFromJIITAccount = 0;
            data.forEach((doc) => {
                 const expenseData = doc.data();
                 const payMonth = new Date(expenseData.expenseDate).getMonth();
                 const payYear = new Date(expenseData.expenseDate).getFullYear();
                 if (payMonth === month && payYear === year) {
                     totalGeneralExpenses += Number(expenseData.expenseAmount);
+                    if (expenseData.expenseTag === 'JIIT_ACCOUNT') {
+                        totalGenExpFromJIITAccount +=  Number(expenseData.expenseAmount);
+                    }
                     generalExpenses.push({
                         id: doc.id,
                         ...doc.data()
                     });
                 }
            });
-           return res.json({ generalExpenses, totalGeneralExpenses });
+           return res.json({ generalExpenses, totalGeneralExpenses, totalGenExpFromJIITAccount });
         })
         .catch((err) => {
             res.status(500).json({ message: 'Something went wrong' });
@@ -182,6 +186,9 @@ const fetchMonthlyGeneralExpenses = (req, res) => {
 const fetchQuarterlyGeneralExpenses = (req, res) => {
     const quarter = req.body.quarter;
     const year = req.body.year;
+
+    console.log('Quarter: ', quarter);
+    console.log('Year: ', year);
 
     let quarterArray = [];
 
@@ -207,6 +214,7 @@ const fetchQuarterlyGeneralExpenses = (req, res) => {
         .then((data) => {
            let generalExpenses = [];
            let totalGeneralExpenses = 0;
+           let totalGenExpFromJIITAccount = 0;
            const totalCategoryExpenseInfo = {};
            const totalSubCategoryExpenseInfo = {};
            data.forEach((doc) => {
@@ -217,6 +225,9 @@ const fetchQuarterlyGeneralExpenses = (req, res) => {
                 if (payYear === year) {
                     if (quarterArray.indexOf(payMonth) > -1) {
                         totalGeneralExpenses += Number(expenseData.expenseAmount);
+                        if (expenseData.expenseTag === 'JIIT_ACCOUNT') {
+                            totalGenExpFromJIITAccount +=  Number(expenseData.expenseAmount);
+                        }
                         generalExpenses.push({
                             id: doc.id,
                             ...doc.data()
@@ -236,7 +247,7 @@ const fetchQuarterlyGeneralExpenses = (req, res) => {
                     }
                 }
            });
-           return res.json({ generalExpenses, totalGeneralExpenses, totalCategoryExpenseInfo, totalSubCategoryExpenseInfo });
+           return res.json({ generalExpenses, totalGeneralExpenses, totalGenExpFromJIITAccount, totalCategoryExpenseInfo, totalSubCategoryExpenseInfo });
         })
         .catch((err) => {
             res.status(500).json({ message: 'Something went wrong' });
@@ -406,6 +417,87 @@ const createQuarterlyProfitLossForInvestors = (req, res) => {
     });
 }
 
+// Fetch Profit Entries
+const getProfitEntries = (req, res) => {
+    const receiverId = req.body.receiverId;
+
+    let query = db.collection('profitLoss');
+
+    if (receiverId) query = query.where('receiverId', '==', receiverId);
+
+    if (req.user.role === 'JIIT_BDK_ADMIN') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query
+        .orderBy('transactionDate', 'desc')
+        .get()
+        .then((data) => {
+           let profitEntries = [];
+           let totalProfit = 0;
+           data.forEach((doc) => {
+            totalProfit += Number(doc.data().amount);
+            profitEntries.push({
+                   id: doc.id,
+                   ...doc.data()
+               });
+           });
+           return res.json({profitEntries, totalProfit});
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
+// Add Profit Entry
+const createProfitEntry = (req, res) => {
+    const profitData = req.body;
+    profitData.type = 'PROFIT_SHARE';
+    profitData.createdDate = new Date().toISOString();
+    profitData.senderId = req.user._id;
+    profitData.senderName = req.user.firstName + ' ' + req.user.lastName;
+    profitData.branchLocation = getBranchLocation(req.user.role);
+
+    db.collection('profitLoss').add(profitData)
+    .then((doc) => {
+        return res.json({ message: `Profit sharing added successfully with id: ${doc.id}` });
+    })
+    .catch((err) => {
+        console.log('Error: ', err);
+        res.status(500).json({ err: err.code });
+    });
+}
+
+// Update Profit Entry
+const updateProfitEntry = (req, res) => {
+    const profitDetails = req.body;
+    profitDetails.modifiedDate = new Date().toISOString();
+    profitDetails.modifiedById = req.user._id;
+    profitDetails.modifiedBy = req.user.firstName + ' ' + req.user.lastName;
+    db.doc(`/profitLoss/${profitDetails.id}`).update(profitDetails)
+        .then(() => {
+            return res.json({ message: 'Profit entry updated successfully' });
+        })
+        .catch(error => {
+            res.status(500).json({ error });
+        })
+};
+
+// Delete Profit Entry
+const deleteProfitEntry = (req, res) => {
+    const plId = req.params.id;
+    db.doc(`/profitLoss/${plId}`).delete()
+        .then(() => {
+            return res.json({ message: 'Profit entry deleted successfully' });
+        })
+        .catch(error => {
+            res.status(500).json({ error });
+        })
+};
+
 const fetchQuarterlyProfitLossForInvestors = (req, res) => {
     const { quarter, year } = req.body;
     let query = db.collection('profitLoss');
@@ -448,5 +540,9 @@ module.exports = {
     fetchQuarterRecurringExpenses,
     fetchQuarterlyGeneralExpenses,
     createQuarterlyProfitLossForInvestors,
-    fetchQuarterlyProfitLossForInvestors
+    fetchQuarterlyProfitLossForInvestors,
+    getProfitEntries,
+    createProfitEntry,
+    updateProfitEntry,
+    deleteProfitEntry
 }
