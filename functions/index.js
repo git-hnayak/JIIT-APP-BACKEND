@@ -75,6 +75,11 @@ const {
     fetchQuarterlyProfitLossForInvestors
 } = require('./handlers/profitvsloss');
 
+const {
+    fetchStudentDetailsReport,
+    fetchStudentPaymentDetailsReport
+} = require('./handlers/reports');
+
 const app = express();
 
 app.use(cors());
@@ -152,6 +157,10 @@ app.delete('/profitentry/:id', FBAuth, deleteProfitEntry);
 
 // Portfolio Routes
 app.post('/myportfolio', FBAuth, fetchMyPortfolio);
+
+//Report Routes
+app.post('/report/studentdetails', FBAuth, fetchStudentDetailsReport);
+app.post('/report/studentpaymentdetails', FBAuth, fetchStudentPaymentDetailsReport);
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);
