@@ -77,7 +77,8 @@ const {
 
 const {
     fetchStudentDetailsReport,
-    fetchStudentPaymentDetailsReport
+    fetchStudentPaymentDetailsReport,
+    fetchExpenditureReport
 } = require('./handlers/reports');
 
 const app = express();
@@ -161,6 +162,7 @@ app.post('/myportfolio', FBAuth, fetchMyPortfolio);
 //Report Routes
 app.post('/report/studentdetails', FBAuth, fetchStudentDetailsReport);
 app.post('/report/studentpaymentdetails', FBAuth, fetchStudentPaymentDetailsReport);
+app.post('/report/expenditure', FBAuth, fetchExpenditureReport);
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);
