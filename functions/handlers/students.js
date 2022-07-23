@@ -117,8 +117,8 @@ const fetchStudentsByQuery = (req, res) => {
                         totalStdPayment += Number(payment.amount);
                     });
                     if (advancePayQuery === 'SARVA_ELIGIBLE') {
-                        const courseFeeFiftyPercent = (courseFee/100) * 50;
-                        if (totalStdPayment >= courseFeeFiftyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR') {
+                        const courseFeeFiftyPercent = (courseFee/100) * 60;
+                        if (totalStdPayment >= courseFeeFiftyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR' && studentData.status !== 'inactive' && studentData.status !== 'archived' && studentData.certificateType === 'REGULAR') {
                             students.push({
                                 id: doc.id,
                                 ...doc.data()

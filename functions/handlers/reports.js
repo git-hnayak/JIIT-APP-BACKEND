@@ -45,7 +45,7 @@ const fetchStudentDetailsReport = (req, res) => {
                     email: studentData.email,
                 }
 
-                if (reqYear && reqMonth) {
+                if (reqYear && (reqMonth || reqMonth === 0)) {
                     if (joinMonth === reqMonth && joinYear === reqYear) {
                         totalStudents += 1
                         students.push(formatedStudentData);
@@ -55,7 +55,7 @@ const fetchStudentDetailsReport = (req, res) => {
                         totalStudents += 1
                         students.push(formatedStudentData);
                     }
-                } else if (reqMonth) {
+                } else if (reqMonth || reqMonth === 0) {
                     if (joinMonth === reqMonth) {
                         totalStudents += 1
                         students.push(formatedStudentData);
@@ -95,7 +95,7 @@ const fetchStudentPaymentDetailsReport = (req, res) => {
                 payments.forEach((payment) => {
                     const payMonth = new Date(payment.date).getMonth();
                     const payYear = new Date(payment.date).getFullYear();
-                    if (reqYear && reqMonth) {
+                    if (reqYear && (reqMonth || reqMonth === 0)) {
                         if (payMonth === reqMonth && payYear === reqYear) {
                             totalPayment += Number(payment.amount);
                             const stdDetailsWithPayment = {
@@ -132,7 +132,7 @@ const fetchStudentPaymentDetailsReport = (req, res) => {
                             }
                             students.push(stdDetailsWithPayment);
                         }
-                    } else  if (reqMonth) {
+                    } else  if (reqMonth || reqMonth === 0) {
                         if (payMonth === reqMonth) {
                             totalPayment += Number(payment.amount);
                             const stdDetailsWithPayment = {
@@ -208,7 +208,7 @@ const fetchExpenditureReport = async (req, res) => {
                 vendorInfo: expenseData.expenseVendor,
                 type: 'GENERAL'
             }
-            if (reqYear && reqMonth) {
+            if (reqYear && (reqMonth || reqMonth === 0)) {
                 if (payMonth === reqMonth && payYear === reqYear) {
                     expenses.push(formatedExpenseData);
                     totalExpFromJiitAcc += Number(expenseData.expenseAmount);
@@ -218,7 +218,7 @@ const fetchExpenditureReport = async (req, res) => {
                     expenses.push(formatedExpenseData);
                     totalExpFromJiitAcc += Number(expenseData.expenseAmount);
                 }
-            } else if (reqMonth) {
+            } else if (reqMonth || reqMonth === 0) {
                 if (payMonth === reqMonth) {
                     expenses.push(formatedExpenseData);
                     totalExpFromJiitAcc += Number(expenseData.expenseAmount);
@@ -241,7 +241,7 @@ const fetchExpenditureReport = async (req, res) => {
                 vendorInfo: recurringExpenseData.receiver,
                 type: 'RECURRING'
             }
-            if (reqYear && reqMonth) {
+            if (reqYear && (reqMonth || reqMonth === 0)) {
                 if (payMonth === reqMonth && payYear === reqYear) {
                     expenses.push(formatedRecExpenseData);
                     totalRecurringExpense += Number(recurringExpenseData.amount);
@@ -251,7 +251,7 @@ const fetchExpenditureReport = async (req, res) => {
                     expenses.push(formatedRecExpenseData);
                     totalRecurringExpense += Number(recurringExpenseData.amount);
                 }
-            } else if (reqMonth) {
+            } else if (reqMonth || reqMonth === 0) {
                 if (payMonth === reqMonth) {
                     expenses.push(formatedRecExpenseData);
                     totalRecurringExpense += Number(recurringExpenseData.amount);
@@ -269,8 +269,129 @@ const fetchExpenditureReport = async (req, res) => {
     }
 };
 
+// Student Due Details Report
+const fetchStudentDueReportMonthly = (req, res) => {
+    const reqMonth = req.body.month;
+    const reqYear = req.body.year;
+
+    let query = db.collection('students');
+
+    if (req.user.role === 'JIIT_BDK_ADMIN' || req.user.role === 'JIIT_BDK_SUPERVISOR') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN' || req.user.role === 'JIIT_KJR_SUPERVISOR') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query = query.where('certificateType', '==', 'REGULAR');
+
+    query
+        .get()
+        .then((data) => {
+           let students = [];
+           let totalStudents = 0;
+           data.forEach((doc) => {
+                const studentData = doc.data();
+                const payments = studentData.payment || [];
+                let isCurrentMonthPaid = false;
+                let totalPaid = 0;
+
+                payments.forEach((payment) => {
+                    totalPaid += Number(payment.amount);
+                    const payMonth = new Date(payment.date).getMonth();
+                    const payYear = new Date(payment.date).getFullYear();
+
+                    if (payYear === reqYear && payMonth === reqMonth) {
+                        isCurrentMonthPaid = true;
+                    }
+                });
+
+                const isDue = Number(studentData.courseFee) - totalPaid > 0;
+
+                if (isDue && !isCurrentMonthPaid) {
+                    totalStudents += 1;
+                    const stdDetailsWithPayment = {
+                        jiitRegdNumber: studentData.jiitRegdNumber,
+                        name: studentData.name,
+                        courseFee: studentData.courseFee,
+                        amountPaid: totalPaid,
+                        amountDue: Number(studentData.courseFee) - totalPaid,
+                        certificateType: studentData.certificateType,
+                        joinDate: studentData.joinDate,
+                        parentName: studentData.parentName,
+                        phoneNumber: studentData.phoneNumber,
+                        courseFee: studentData.courseFee,
+                        sarvaRollNumber: studentData.sarvaRollNumber
+                    }
+                    students.push(stdDetailsWithPayment);
+                }
+           });
+           return res.json({ students, totalStudents });
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
+// Student SARVA Elligible Details Report
+const fetchStudentSARVAElligible = (req, res) => {
+
+    let query = db.collection('students');
+
+    if (req.user.role === 'JIIT_BDK_ADMIN' || req.user.role === 'JIIT_BDK_SUPERVISOR') {
+        query = query.where('branchLocation', '==', 'BDK');
+    } else if (req.user.role === 'JIIT_KJR_ADMIN' || req.user.role === 'JIIT_KJR_SUPERVISOR') {
+        query = query.where('branchLocation', '==', 'KJR');
+    }
+
+    query = query.where('certificateType', '==', 'REGULAR');
+
+    query
+        .get()
+        .then((data) => {
+           let students = [];
+           let totalStudents = 0;
+           data.forEach((doc) => {
+                const studentData = doc.data();
+                const payments = studentData.payment || [];
+                let totalPaid = 0;
+
+                payments.forEach((payment) => {
+                    totalPaid += Number(payment.amount);
+                });
+
+                const courseFeeSixtyPercent = (Number(studentData.courseFee)/100) * 60;
+
+                if (totalPaid >= courseFeeSixtyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR' && studentData.status !== 'inactive' && studentData.status !== 'archived' ) {
+                    totalStudents += 1;
+                    const stdDetailsWithPayment = {
+                        jiitRegdNumber: studentData.jiitRegdNumber,
+                        name: studentData.name,
+                        amountPaid: totalPaid,
+                        amountDue: Number(studentData.courseFee) - totalPaid,
+                        certificateType: studentData.certificateType,
+                        joinDate: studentData.joinDate,
+                        parentName: studentData.parentName,
+                        phoneNumber: studentData.phoneNumber,
+                        courseFee: studentData.courseFee,
+                        sarvaRollNumber: studentData.sarvaRollNumber || 'NA',
+                        sarvaRegistrationStatus: studentData.sarvaRegistrationStatus
+                    }
+                    students.push(stdDetailsWithPayment);
+                }
+           });
+           return res.json({ students, totalStudents });
+        })
+        .catch((err) => {
+            res.status(500).json({ message: 'Something went wrong' });
+            console.log('Error: ', err);
+        });
+};
+
 module.exports = {
     fetchStudentDetailsReport,
     fetchStudentPaymentDetailsReport,
-    fetchExpenditureReport
+    fetchExpenditureReport,
+    fetchStudentDueReportMonthly,
+    fetchStudentSARVAElligible
 }

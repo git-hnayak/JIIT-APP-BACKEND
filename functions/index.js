@@ -78,7 +78,9 @@ const {
 const {
     fetchStudentDetailsReport,
     fetchStudentPaymentDetailsReport,
-    fetchExpenditureReport
+    fetchExpenditureReport,
+    fetchStudentDueReportMonthly,
+    fetchStudentSARVAElligible
 } = require('./handlers/reports');
 
 const app = express();
@@ -163,6 +165,8 @@ app.post('/myportfolio', FBAuth, fetchMyPortfolio);
 app.post('/report/studentdetails', FBAuth, fetchStudentDetailsReport);
 app.post('/report/studentpaymentdetails', FBAuth, fetchStudentPaymentDetailsReport);
 app.post('/report/expenditure', FBAuth, fetchExpenditureReport);
+app.post('/report/studentduemonthly', FBAuth, fetchStudentDueReportMonthly);
+app.get('/report/sarvaelligible', FBAuth, fetchStudentSARVAElligible);
 
 // exports.api = functions.region('asia-south1').https.onRequest(app);
 exports.api = functions.https.onRequest(app);
