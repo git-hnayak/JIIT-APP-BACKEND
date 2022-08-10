@@ -109,7 +109,8 @@ const fetchStudentPaymentDetailsReport = (req, res) => {
                                 parentName: studentData.parentName,
                                 course: studentData.course,
                                 courseFee: studentData.courseFee,
-                                sarvaRollNumber: studentData.sarvaRollNumber
+                                sarvaRollNumber: studentData.sarvaRollNumber,
+                                id: studentData.id
 
                             }
                             students.push(stdDetailsWithPayment);
@@ -128,7 +129,8 @@ const fetchStudentPaymentDetailsReport = (req, res) => {
                                 parentName: studentData.parentName,
                                 course: studentData.course,
                                 courseFee: studentData.courseFee,
-                                sarvaRollNumber: studentData.sarvaRollNumber
+                                sarvaRollNumber: studentData.sarvaRollNumber,
+                                id: studentData.id
                             }
                             students.push(stdDetailsWithPayment);
                         }
@@ -146,7 +148,8 @@ const fetchStudentPaymentDetailsReport = (req, res) => {
                                 parentName: studentData.parentName,
                                 course: studentData.course,
                                 courseFee: studentData.courseFee,
-                                sarvaRollNumber: studentData.sarvaRollNumber
+                                sarvaRollNumber: studentData.sarvaRollNumber,
+                                id: studentData.id
                             }
                             students.push(stdDetailsWithPayment);
                         }
@@ -206,7 +209,8 @@ const fetchExpenditureReport = async (req, res) => {
                 note: expenseData.expenseNote,
                 referenceNumber: expenseData.expenseRefNo,
                 vendorInfo: expenseData.expenseVendor,
-                type: 'GENERAL'
+                type: 'GENERAL',
+                id: expenseData.id
             }
             if (reqYear && (reqMonth || reqMonth === 0)) {
                 if (payMonth === reqMonth && payYear === reqYear) {
@@ -239,7 +243,8 @@ const fetchExpenditureReport = async (req, res) => {
                 note: 'Recurring/Monthly expenses',
                 referenceNumber: 'NA',
                 vendorInfo: recurringExpenseData.receiver,
-                type: 'RECURRING'
+                type: 'RECURRING',
+                id: recurringExpenseData.id
             }
             if (reqYear && (reqMonth || reqMonth === 0)) {
                 if (payMonth === reqMonth && payYear === reqYear) {
@@ -312,7 +317,6 @@ const fetchStudentDueReportMonthly = (req, res) => {
                     const stdDetailsWithPayment = {
                         jiitRegdNumber: studentData.jiitRegdNumber,
                         name: studentData.name,
-                        courseFee: studentData.courseFee,
                         amountPaid: totalPaid,
                         amountDue: Number(studentData.courseFee) - totalPaid,
                         certificateType: studentData.certificateType,
@@ -320,7 +324,8 @@ const fetchStudentDueReportMonthly = (req, res) => {
                         parentName: studentData.parentName,
                         phoneNumber: studentData.phoneNumber,
                         courseFee: studentData.courseFee,
-                        sarvaRollNumber: studentData.sarvaRollNumber
+                        sarvaRollNumber: studentData.sarvaRollNumber,
+                        id: studentData.id
                     }
                     students.push(stdDetailsWithPayment);
                 }
@@ -375,7 +380,8 @@ const fetchStudentSARVAElligible = (req, res) => {
                         phoneNumber: studentData.phoneNumber,
                         courseFee: studentData.courseFee,
                         sarvaRollNumber: studentData.sarvaRollNumber || 'NA',
-                        sarvaRegistrationStatus: studentData.sarvaRegistrationStatus
+                        sarvaRegistrationStatus: studentData.sarvaRegistrationStatus,
+                        id: studentData.id
                     }
                     students.push(stdDetailsWithPayment);
                 }

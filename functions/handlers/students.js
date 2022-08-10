@@ -38,10 +38,24 @@ const fetchRecentStudents = (req, res) => {
         .then((data) => {
            let students = [];
            data.forEach((doc) => {
-               students.push({
-                   id: doc.id,
-                   ...doc.data()
-               });
+                const studentData = doc.data();
+                const payments = studentData.payment || [];
+                let totalPaid = 0;
+                payments.forEach((payment) => {
+                    totalPaid += Number(payment.amount);
+                });
+
+                const isDue = Number(studentData.courseFee) - totalPaid > 100;
+                const courseFeeSixtyPercent = (Number(studentData.courseFee)/100) * 60;
+                const isSarvaEligible = totalPaid >= courseFeeSixtyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR' && studentData.status !== 'inactive' && studentData.status !== 'archived';
+                students.push({
+                    id: doc.id,
+                    ...doc.data(),
+                    isDue,
+                    totalPaid,
+                    totalDue: Number(studentData.courseFee) - totalPaid,
+                    isSarvaEligible
+                });
            });
            return res.json(students);
         })
@@ -110,32 +124,48 @@ const fetchStudentsByQuery = (req, res) => {
            data.forEach((doc) => {
                 const studentData = doc.data();
                 const payments = studentData.payment || [];
-                const courseFee = Number(studentData.courseFee);
+
+                let totalStdPayment = 0;
+                payments.forEach((payment) => {
+                    totalStdPayment += Number(payment.amount);
+                });
+
+                const isDue = Number(studentData.courseFee) - totalStdPayment > 0;
+                const courseFeeSixtyPercent = (Number(studentData.courseFee)/100) * 60;
+                const isSarvaEligible = totalStdPayment >= courseFeeSixtyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR' && studentData.status !== 'inactive' && studentData.status !== 'archived' && studentData.certificateType === 'REGULAR';
+
                 if (advancePayQuery) {
-                    let totalStdPayment = 0;
-                    payments.forEach((payment) => {
-                        totalStdPayment += Number(payment.amount);
-                    });
                     if (advancePayQuery === 'SARVA_ELIGIBLE') {
-                        const courseFeeFiftyPercent = (courseFee/100) * 60;
-                        if (totalStdPayment >= courseFeeFiftyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR' && studentData.status !== 'inactive' && studentData.status !== 'archived' && studentData.certificateType === 'REGULAR') {
+                        if (totalStdPayment >= courseFeeSixtyPercent && studentData.sarvaRegistrationStatus !== 'COMPLETE' && studentData.course !== 'JUNIOR' && studentData.status !== 'inactive' && studentData.status !== 'archived' && studentData.certificateType === 'REGULAR') {
                             students.push({
                                 id: doc.id,
-                                ...doc.data()
+                                ...doc.data(),
+                                isDue,
+                                totalPaid: totalStdPayment,
+                                totalDue: Number(studentData.courseFee) - totalStdPayment,
+                                isSarvaEligible: true
                             });
                         }
                     } else if (advancePayQuery === 'COURSE_FEE_PENDING') {
-                        if (totalStdPayment < courseFee) {
+                        if (totalStdPayment < Number(studentData.courseFee)) {
                             students.push({
                                 id: doc.id,
-                                ...doc.data()
+                                ...doc.data(),
+                                isDue,
+                                totalPaid: totalStdPayment,
+                                totalDue: Number(studentData.courseFee) - totalStdPayment,
+                                isSarvaEligible
                             });
                         }
                     }
                 } else {
                     students.push({
                         id: doc.id,
-                        ...doc.data()
+                        ...doc.data(),
+                        isDue,
+                        totalPaid: totalStdPayment,
+                        totalDue: Number(studentData.courseFee) - totalStdPayment,
+                        isSarvaEligible
                     });
                 }
            });
